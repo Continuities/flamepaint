@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import classnames from 'classnames';
+import throttle from './throttle';
 import './App.css';
 
 const ROWS = 5;
@@ -48,6 +49,21 @@ function toggleCell(model, row, col) {
   return model.map((cells, r) => cells.map((val, c) => r == row && c == col ? !val : val));
 }
 
+const postState = throttle(rows => {
+  fetch(new Request('/', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json, text/plain, */*',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      rows: ROWS,
+      columns: COLS,
+      pattern: rows
+    })
+  }))
+}, 100);
+
 class App extends Component {
 
   constructor() {
@@ -64,6 +80,10 @@ class App extends Component {
 
   handleClick(row, col) {
     this.setState({ rows: toggleCell(this.state.rows, row, col) });
+  }
+
+  componentWillUpdate(_, nextState) {
+    postState(nextState.rows);
   }
 
   render() {
