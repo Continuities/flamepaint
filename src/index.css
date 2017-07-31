@@ -2,6 +2,26 @@ body, html {
   margin: 0;
   padding: 0;
   height: 100%;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#root {
+  width: 100%;
+  max-width: 100vh;
+  position: relative;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.grid {
+  box-shadow: 0 0 5px 0 rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.3);
 }
 
 .row {
@@ -11,7 +31,7 @@ body, html {
 .cell {
   flex: 1;
   width:100px;
-  border: 1px solid black;
+  background: white;
   position: relative;
 }
 
@@ -24,4 +44,16 @@ body, html {
 
 .cell.active {
   background: #FF4136;
+}
+
+.divided .row {
+  margin-bottom: 1px;
+}
+.divided .cell {
+  margin-right: 1px;
+}
+
+.divided .row:last-child,
+.divided .cell:last-child {
+  margin: 0;
 }
