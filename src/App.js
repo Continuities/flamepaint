@@ -8,6 +8,8 @@ import './App.css';
 const ROWS = 5;
 const COLS = 5;
 
+let dirtyState = false;
+
 function Cell(props) {
   return (
     <div
@@ -98,7 +100,7 @@ class App extends Component {
               .fill(null)
               .map((_, row) => new Array(COLS)
                   .fill(null)
-                  .map(() => false))
+                  .map(() => 0))
     };
 
     // Christ, React events are just a shitty subset of DOM events. Don't use them.
@@ -115,10 +117,11 @@ class App extends Component {
     if (row == null) { return; }
 
     const cell = this.state.rows[row][col];
+    dirtyState = true;
 
     this.setState({
       editState: cell ? EditState.CLEAR : EditState.DRAW,
-      rows: setCell(this.state.rows, row, col, !cell)
+      rows: setCell(this.state.rows, row, col, Number(!cell))
     });
   }
 
@@ -144,14 +147,19 @@ class App extends Component {
       return;
     }
 
+    dirtyState = true;
+
     this.setState({
       editState: this.state.editState,
-      rows: setCell(this.state.rows, row, col, this.state.editState === EditState.DRAW)
+      rows: setCell(this.state.rows, row, col, Number(this.state.editState === EditState.DRAW))
     });
   }
 
   componentWillUpdate(_, nextState) {
-    postState(nextState.rows);
+    if (dirtyState) {
+      postState(nextState.rows);
+      dirtyState = false;
+    }
   }
 
   render() {
