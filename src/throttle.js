@@ -1,4 +1,4 @@
-module.exports = function (fn, delay) {
+function doTheThing (callAfter, fn, delay) {
   let lastCall = null;
   let delayedCall = null;
   return function() {
@@ -8,8 +8,11 @@ module.exports = function (fn, delay) {
       fn(...arguments);
       lastCall = Date.now();
     }
-    else {
+    else if (callAfter) {
       delayedCall = setTimeout(fn.bind(null, ...arguments), delay - (Date.now() - lastCall));
     }
   };
 }
+
+export const throttle = doTheThing.bind(null, true);
+export const debounce = doTheThing.bind(null, false);
