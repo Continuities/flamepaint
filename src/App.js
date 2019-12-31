@@ -9,6 +9,14 @@ const ROWS = 5;
 const COLS = 5;
 
 let dirtyState = false;
+let blinkers = [];
+for (let i = 0; i < ROWS; i++) {
+  var row = [];
+  for (let j = 0; j < COLS; j++) {
+    row[j] = null;
+  }
+  blinkers.push(row);
+}
 
 function Cell(props) {
   return (
@@ -96,6 +104,7 @@ class App extends Component {
 
     this.state = {
       editState: EditState.NONE,
+      blinkState: null,
       rows: new Array(ROWS)
               .fill(null)
               .map((_, row) => new Array(COLS)
@@ -110,6 +119,7 @@ class App extends Component {
     document.addEventListener('touchend', makeHandler(e => this.up(e)));
     document.addEventListener('touchstart', makeHandler(e => this.down(e)));
     document.addEventListener('touchmove', makeHandler(e => this.move(e)));
+    document.addEventListener('keydown', makeHandler(e => this.key(e)));
   }
 
   down(e) {
@@ -119,9 +129,34 @@ class App extends Component {
     const cell = this.state.rows[row][col];
     dirtyState = true;
 
+    let newRows;
+    if (this.state.blinkState != null) {
+      if (blinkers[row][col] == undefined) {
+        // Set the blinker
+        blinkers[row][col] = setInterval(() => {
+          dirtyState = true;
+          this.setState({
+            rows: setCell(this.state.rows, row, col, Number(!this.state.rows[row][col]))
+          });
+        }, 1000 / this.state.blinkState);
+      }
+      else {
+        // Remove the blinker
+        clearInterval(blinkers[row][col]);
+        blinkers[row][col] = null;
+      }
+      newRows = this.state.rows;
+    }
+    else {
+      // Remove the blinker
+      clearInterval(blinkers[row][col]);
+      blinkers[row][col] = null;
+      newRows = setCell(this.state.rows, row, col, Number(!cell));
+    }
+
     this.setState({
       editState: cell ? EditState.CLEAR : EditState.DRAW,
-      rows: setCell(this.state.rows, row, col, Number(!cell))
+      rows: newRows
     });
   }
 
@@ -149,9 +184,42 @@ class App extends Component {
 
     dirtyState = true;
 
+    let newRows;
+    if (this.state.blinkState != null) {
+      if (blinkers[row][col] == undefined && this.state.editState === EditState.DRAW) {
+        // Set the blinker
+        blinkers[row][col] = setInterval(() => {
+          dirtyState = true;
+          this.setState({
+            rows: setCell(this.state.rows, row, col, Number(!this.state.rows[row][col]))
+          });
+        }, 1000 / this.state.blinkState);
+      }
+      else if (blinkers[row][col] != undefined && this.state.editState === EditState.CLEAR) {
+        // Remove the blinker
+        clearInterval(blinkers[row][col]);
+        blinkers[row][col] = null;
+      }
+      newRows = this.state.rows;
+    }
+    else {
+      // Remove the blinker
+      clearInterval(blinkers[row][col]);
+      blinkers[row][col] = null;
+      newRows = setCell(this.state.rows, row, col, Number(this.state.editState === EditState.DRAW))
+    }
+
     this.setState({
       editState: this.state.editState,
-      rows: setCell(this.state.rows, row, col, Number(this.state.editState === EditState.DRAW))
+      rows: newRows
+    });
+  }
+
+  key(e) {
+    const num = parseInt(e.key);
+    if (isNaN(num)) { return; }
+    this.setState({
+      blinkState: num == 0 ? null : num
     });
   }
 
@@ -163,9 +231,14 @@ class App extends Component {
   }
 
   render() {
-    return <Grid
-      rows={this.state.rows}
-    />
+    return (
+      <div>
+        <div className='blink-state'>{this.state.blinkState}</div>
+        <Grid
+          rows={this.state.rows}
+        />
+      </div>
+    );
   }
 
 }
